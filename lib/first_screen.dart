@@ -1,12 +1,25 @@
-import 'package:flutter/cupertino.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flip_card/flip_card.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:jandulaseneca/login_page.dart';
+import 'package:jandulaseneca/sign_in.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 
-class seneca extends StatefulWidget {
-  @override
+import 'listado.dart';
+
+
+final databaseReference = FirebaseDatabase.instance.reference();
+final _firebaseRef = FirebaseDatabase().reference();
+var referencia = _firebaseRef.child("asistencia").push().path;
+String clave = referencia.substring(referencia.indexOf("-"));
+GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
+
+class FirstScreen extends StatefulWidget {
   _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State<seneca> {
+class _HomeState extends State<FirstScreen> {
   int _selectedIndex = 0;
   static const TextStyle optionStyle =
       TextStyle(fontSize: 30, fontWeight: FontWeight.w700);
@@ -102,16 +115,24 @@ class Body extends StatelessWidget {
     var size = MediaQuery.of(context).size;
 
     /*24 is for notification bar on Android*/
-    final double itemHeight = (size.height - kToolbarHeight - 200) / 2;
+    final double itemHeight = (size.height - kToolbarHeight - 300) / 2;
     final double itemWidth = size.width / 2;
 
     return Column(
       children: <Widget>[
-        image,
+        SizedBox(height: 10),
+        CircleAvatar(
+          backgroundImage: NetworkImage(
+            imageUrl,
+          ),
+          radius: 40,
+          backgroundColor: Colors.transparent,
+        ),
+        SizedBox(height: 10),
         Container(
           width: MediaQuery.of(context).size.width * 0.9,
-          margin: EdgeInsets.only(top: 20.0),
-          padding: EdgeInsets.all(10.0),
+          margin: EdgeInsets.only(top: 6.0),
+          padding: EdgeInsets.all(8.0),
           decoration: BoxDecoration(
             color: Color(0xff2b2b2b),
             borderRadius: BorderRadius.circular(10.0),
@@ -119,32 +140,30 @@ class Body extends StatelessWidget {
           child: RichText(
             textAlign: TextAlign.center,
             text: TextSpan(
-              text: 'Bienvenido : Prueba ',
+              text: 'Bienvenido: ' + name + ' ' + apellidos,
               style: TextStyle(fontSize: 20.0, fontFamily: 'Karla'),
-
             ),
           ),
         ),
-
-        SizedBox(height: 10),
+        SizedBox(height: 30),
         Container(
           alignment: Alignment.centerLeft,
-          child: Text('   I.E.S - Jandula',
+          child: Text('  I.E.S - Jandula    -    Profesorado',
               style: DefaultTextStyle.of(context)
                   .style
                   .apply(color: Colors.blueAccent)
                   .apply(fontSizeFactor: 1.5)),
         ),
-        SizedBox(height: 10),
+        SizedBox(height: 20),
         Container(
           alignment: Alignment.centerLeft,
-          child: Text('   Profesorado',
+          child: Text('  EMAIL:  ' + email,
               style: DefaultTextStyle.of(context)
                   .style
-                 .apply(color: Colors.blueAccent)
+                  .apply(color: Colors.blueAccent)
                   .apply(fontSizeFactor: 1.5)),
         ),
-        SizedBox(height: 10),
+        SizedBox(height: 90),
         Expanded(
           child: GridView.count(
             crossAxisCount: 3,
@@ -155,20 +174,38 @@ class Body extends StatelessWidget {
             children: <Widget>[
               new GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SecondRoute(),
+                  AwesomeDialog(
+                    context: context,
+                    animType: AnimType.SCALE,
+                    dialogType: DialogType.INFO,
+                    body: Center(
+                      child: Text(
+                        'Asistencia',
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      ),
                     ),
-                  );
+                    tittle: 'This is Ignored',
+                    desc: 'This is also Ignored',
+                    btnCancelOnPress: () {},
+                    btnOkOnPress: () {
+                      _firebaseRef.child("asistencia").child(clave).set({
+                        "Apellidos": apellidos,
+                        "Nombre": name,
+                        "fecha_inicio": new DateFormat('yyyy-MM-dd – kk:mm')
+                            .format(DateTime.now()),
+                        "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
+                            .format(DateTime.now())
+                      });
+                    },
+                  ).show();
                 },
                 child: new Card(
                   child: new Container(
-                    padding: new EdgeInsets.all(17.0),
+                    padding: new EdgeInsets.all(13.0),
                     child: new Column(
                       children: <Widget>[
                         new Text('Asistencia'),
-                        SizedBox(height: 10),
+                        SizedBox(height: 30),
                         Icon(Icons.question_answer)
                       ],
                     ),
@@ -176,21 +213,21 @@ class Body extends StatelessWidget {
                 ),
               ),
               new GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SecondRoute(),
-                    ),
-                  );
+                onTap: () async {
+                  _firebaseRef.child("asistencia").child(clave).update({
+                    "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
+                        .format(DateTime.now())
+                  });
+
+                  generarclave();
                 },
                 child: new Card(
                   child: new Container(
-                    padding: new EdgeInsets.all(17.0),
+                    padding: new EdgeInsets.all(13.0),
                     child: new Column(
                       children: <Widget>[
                         new Text('Listado'),
-                        SizedBox(height: 10),
+                        SizedBox(height: 30),
                         Icon(Icons.local_printshop)
                       ],
                     ),
@@ -202,22 +239,106 @@ class Body extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SecondRoute(),
+                        builder: (context) => LoginPage(),
                       ),
                     );
                   },
                   child: new Card(
                     child: new Container(
-                      padding: new EdgeInsets.all(17.0),
+                      padding: new EdgeInsets.all(13.0),
                       child: new Column(
                         children: <Widget>[
                           Text('Salir'),
-                          SizedBox(height: 10),
+                          SizedBox(height: 30),
                           Icon(Icons.exit_to_app)
                         ],
                       ),
                     ),
                   )),
+              FlipCard(
+                key: cardKey,
+                flipOnTouch: false,
+                front: GestureDetector(
+                  onTap: () {
+                    AwesomeDialog(
+                      context: context,
+                      animType: AnimType.SCALE,
+                      dialogType: DialogType.INFO,
+                      body: Center(
+                        child: Text(
+                          'Asistencia',
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
+                      ),
+                      tittle: 'This is Ignored',
+                      desc: 'This is also Ignored',
+                      btnCancelOnPress: () {},
+                      btnOkOnPress: () {
+                        _firebaseRef.child("asistencia").child(clave).set({
+                          "Apellidos": apellidos,
+                          "Nombre": name,
+                          "fecha_inicio": new DateFormat('yyyy-MM-dd – kk:mm')
+                              .format(DateTime.now()),
+                          "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
+                              .format(DateTime.now())
+                        });
+                        cardKey.currentState.toggleCard();
+                      },
+                    ).show();
+                  },
+                  child: new Card(
+                    color: Colors.green,
+                    child: new Container(
+                      padding: new EdgeInsets.all(13.0),
+                      child: new Column(
+                        children: <Widget>[
+                          new Text('Asistencia'),
+                          SizedBox(height: 30),
+                          Icon(Icons.verified_user)
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                back: GestureDetector(
+                  onTap: () {
+                    AwesomeDialog(
+                      context: context,
+                      animType: AnimType.SCALE,
+                      dialogType: DialogType.INFO,
+                      body: Center(
+                        child: Text(
+                          'Liberar Asistencia',
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
+                      ),
+                      tittle: 'This is Ignored',
+                      desc: 'This is also Ignored',
+                      btnCancelOnPress: () {},
+                      btnOkOnPress: () {
+                        _firebaseRef.child("asistencia").child(clave).update({
+                          "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
+                              .format(DateTime.now())
+                        });
+                        cardKey.currentState.toggleCard();
+                      },
+                    ).show();
+                  },
+                  child: new Card(
+                    color: Colors.red,
+                    child: new Container(
+                      padding: new EdgeInsets.all(13.0),
+                      child: new Column(
+                        children: <Widget>[
+                          new Text('Asistencia'),
+                          SizedBox(height: 30),
+                          Icon(Icons.next_week)
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               new GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -229,12 +350,12 @@ class Body extends StatelessWidget {
                   },
                   child: new Card(
                     child: new Container(
-                      padding: new EdgeInsets.all(17.0),
+                      padding: new EdgeInsets.all(13.0),
                       child: new Column(
                         children: <Widget>[
-                          new Text('pagina1'),
-                          SizedBox(height: 10),
-                          Icon(Icons.share)
+                          new Text('Imprimir'),
+                          SizedBox(height: 30),
+                          Icon(Icons.view_list)
                         ],
                       ),
                     ),
@@ -250,32 +371,11 @@ class Body extends StatelessWidget {
                   },
                   child: new Card(
                     child: new Container(
-                      padding: new EdgeInsets.all(17.0),
+                      padding: new EdgeInsets.all(13.0),
                       child: new Column(
                         children: <Widget>[
                           new Text('pagina1'),
-                          SizedBox(height: 10),
-                          Icon(Icons.share)
-                        ],
-                      ),
-                    ),
-                  )),
-              new GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SecondRoute(),
-                      ),
-                    );
-                  },
-                  child: new Card(
-                    child: new Container(
-                      padding: new EdgeInsets.all(17.0),
-                      child: new Column(
-                        children: <Widget>[
-                          new Text('pagina1'),
-                          SizedBox(height: 10),
+                          SizedBox(height: 30),
                           Icon(Icons.share)
                         ],
                       ),
@@ -289,36 +389,8 @@ class Body extends StatelessWidget {
   }
 }
 
-class SecondRoute extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Pagina2"),
-      ),
-      body: Center(
-        child: Container(
-          alignment: Alignment.bottomCenter,
-          child: RaisedButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('Atras'),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class FlightImageAsset extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    AssetImage assetImage = AssetImage('assets/images/j.png');
-    Image image = Image(image: assetImage, width: 100);
-    return Container(
-      child: image,
-    );
-  }
+void generarclave() {
+  referencia =
+      new FirebaseDatabase().reference().child("asistencia").push().path;
+  clave = referencia.substring(referencia.indexOf("-"));
 }
