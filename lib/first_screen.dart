@@ -1,20 +1,26 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:jandulaseneca/login_page.dart';
 import 'package:jandulaseneca/sign_in.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
-
 import 'listado.dart';
+import 'listado_firestore.dart';
 
+final GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
 
+//firebase
 final databaseReference = FirebaseDatabase.instance.reference();
 final _firebaseRef = FirebaseDatabase().reference();
 var referencia = _firebaseRef.child("asistencia").push().path;
 String clave = referencia.substring(referencia.indexOf("-"));
-GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
+//firebase
 
+
+final databaseReferencef = Firestore.instance;
+DocumentReference ref;
+String myId;
 class FirstScreen extends StatefulWidget {
   _HomeState createState() => _HomeState();
 }
@@ -214,12 +220,13 @@ class Body extends StatelessWidget {
               ),
               new GestureDetector(
                 onTap: () async {
-                  _firebaseRef.child("asistencia").child(clave).update({
-                    "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
-                        .format(DateTime.now())
-                  });
+                  //  _firebaseRef.child("asistencia").child(clave).update({
+                  //                    "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
+                  //                        .format(DateTime.now())
+                  //                  });
 
-                  generarclave();
+                  getData();
+                  //generarclave();
                 },
                 child: new Card(
                   child: new Container(
@@ -236,12 +243,7 @@ class Body extends StatelessWidget {
               ),
               new GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => LoginPage(),
-                      ),
-                    );
+                    Navigator.pop(context);
                   },
                   child: new Card(
                     child: new Container(
@@ -274,14 +276,18 @@ class Body extends StatelessWidget {
                       desc: 'This is also Ignored',
                       btnCancelOnPress: () {},
                       btnOkOnPress: () {
-                        _firebaseRef.child("asistencia").child(clave).set({
-                          "Apellidos": apellidos,
-                          "Nombre": name,
-                          "fecha_inicio": new DateFormat('yyyy-MM-dd – kk:mm')
-                              .format(DateTime.now()),
-                          "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
-                              .format(DateTime.now())
-                        });
+                        //firebase
+                        //  _firebaseRef.child("asistencia").child(clave).set({
+                        //                          "Apellidos": apellidos,
+                        //                          "Nombre": name,
+                        //                          "fecha_inicio": new DateFormat('yyyy-MM-dd – kk:mm')
+                        //                              .format(DateTime.now()),
+                        //                          "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
+                        //                              .format(DateTime.now())
+                        //                        });
+                        //firebase
+
+                        createRecord();
                         cardKey.currentState.toggleCard();
                       },
                     ).show();
@@ -316,10 +322,14 @@ class Body extends StatelessWidget {
                       desc: 'This is also Ignored',
                       btnCancelOnPress: () {},
                       btnOkOnPress: () {
-                        _firebaseRef.child("asistencia").child(clave).update({
-                          "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
-                              .format(DateTime.now())
-                        });
+                        updateData();
+                        //firebase
+                        // _firebaseRef.child("asistencia").child(clave).update({
+                        //                          "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
+                        //                              .format(DateTime.now())
+                        //                        });
+                        //firebase
+                        generarclave();
                         cardKey.currentState.toggleCard();
                       },
                     ).show();
@@ -330,7 +340,7 @@ class Body extends StatelessWidget {
                       padding: new EdgeInsets.all(13.0),
                       child: new Column(
                         children: <Widget>[
-                          new Text('Asistencia'),
+                          new Text('Dejar Asistencia'),
                           SizedBox(height: 30),
                           Icon(Icons.next_week)
                         ],
@@ -365,7 +375,7 @@ class Body extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SecondRoute(),
+                        builder: (context) => ListPage(),
                       ),
                     );
                   },
@@ -394,3 +404,42 @@ void generarclave() {
       new FirebaseDatabase().reference().child("asistencia").push().path;
   clave = referencia.substring(referencia.indexOf("-"));
 }
+
+
+//funciones firestore
+
+void createRecord() async {
+ ref = await databaseReferencef
+      .collection("Asistencia")
+      .add({
+    "Apellidos": apellidos,
+    "Nombre": name,
+    "Fecha_inicio": new DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now()),
+    "Fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now())
+  });
+}
+
+void updateData() {
+
+  myId= ref.documentID;
+  try {
+    databaseReferencef
+        .collection('Asistencia')
+        .document(myId)
+        .updateData({
+      "Fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now())
+    });
+  } catch (e) {
+    print(e.toString());
+  }
+}
+void getData() {
+  databaseReferencef
+      .collection("Asistencia")
+      .getDocuments()
+      .then((QuerySnapshot snapshot) {
+    snapshot.documents.forEach((f) => print('${f.data}}'));
+  });
+}
+
+//funciones firestore

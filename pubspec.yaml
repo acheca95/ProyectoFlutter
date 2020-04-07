@@ -14,7 +14,7 @@ description: Proyecto I.E.S Jandula
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.2.2 <3.0.0"
 
 dependencies:
   flutter:
@@ -29,12 +29,18 @@ dependencies:
   flutter_shapes: ^0.2.1
   animator: ^1.0.0+5
   firebase_database: ^3.1.3
+  queries: ^0.1.14
   intl: ^0.16.1
   firebase_messaging: ^6.0.13
   plain_notification_token: ^0.0.1
   awesome_dialog: ^0.1.3
   flip_card: ^0.4.4
   get_it: ^4.0.1
+  pdf: ^1.3.24
+  flutter_full_pdf_viewer: ^1.0.6
+  path_provider: ^1.5.1
+  font_awesome_flutter: ^8.8.1
+  syncfusion_flutter_pdf: ^18.1.42-beta
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
@@ -59,7 +65,11 @@ flutter:
   assets:
     - assets/images/j.png
     - assets/images/google_logo.png
-
+    - assets/OpenSans-Regular.ttf
+    - assets/OpenSans-Bold.ttf
+    - assets/OpenSans-Italic.ttf
+    - assets/OpenSans-BoldItalic.ttf
+    - assets/OpenSans-SemiBold.ttf
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 
