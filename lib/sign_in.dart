@@ -31,7 +31,7 @@ Future<String> signInWithGoogle() async {
   email = user.email;
   imageUrl = user.photoUrl;
 
-  // Only taking the first part of the name, i.e., First Name
+  // Obtenemos nombre y apellidos
   if (name.contains(" ")) {
     apellidos=name.substring(name.indexOf(" ")+1);
     name = name.substring(0, name.indexOf(" "));
@@ -44,11 +44,11 @@ Future<String> signInWithGoogle() async {
   final FirebaseUser currentUser = await _auth.currentUser();
   assert(user.uid == currentUser.uid);
 
-  return 'signInWithGoogle succeeded: $user';
+  return 'Login realizado correctamente: $user';
 }
 
 void signOutGoogle() async {
   await googleSignIn.signOut();
 
-  print("User Sign Out");
+  print("Se cerro la sesion.");
 }

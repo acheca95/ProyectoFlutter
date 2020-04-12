@@ -14,7 +14,8 @@ class SecondRoute extends StatefulWidget  {
   SecondRouteState createState() => SecondRouteState();
 }
 class SecondRouteState extends State<SecondRoute> {
-
+  static AssetImage assetImage = AssetImage('assets/images/construccion.jpg');
+  Image image = Image(image: assetImage, width: 300);
   List<Profesores> profesores;
   Profesores profesor;
   DatabaseReference ProfesRef;
@@ -52,7 +53,7 @@ class SecondRouteState extends State<SecondRoute> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Listado Asistencia"),
+        title: Text("Pagina"),
       ),
       body: Center(
         child: Column(
@@ -63,25 +64,27 @@ class SecondRouteState extends State<SecondRoute> {
                 style: DefaultTextStyle.of(context).style,
                 children: <TextSpan>[
                   TextSpan(
-                    text: "Listado\n",
+                    text: "En Proceso...\n",
                     style: TextStyle(color: Colors.black.withOpacity(0.6)),
                   ),
                 ],
               ),
             ) ),
             Flexible(
-              child: FirebaseAnimatedList(
-                query: ProfesRef,
-                itemBuilder: (BuildContext context, DataSnapshot snapshot,
-                    Animation<double> animation, int index) {
-                  return new ListTile(
-                    title: Text('Apellidos: ' +profesores[index].Apellidos+' - Nombre: ' +profesores[index].Nombre),
+              child: image,
 
-                    subtitle: Text('Fecha Inicio: ' +profesores[index].fecha_inicio+'                                       - Fecha Fin: ' +profesores[index].fecha_fin),
-              
-                  );
-                },
-              ),
+                //FirebaseAnimatedList(
+              //                query: ProfesRef,
+              //                itemBuilder: (BuildContext context, DataSnapshot snapshot,
+              //                    Animation<double> animation, int index) {
+              //                  return new ListTile(
+              //                    title: Text('Apellidos: ' +profesores[index].Apellidos+' - Nombre: ' +profesores[index].Nombre),
+              //
+              //                    subtitle: Text('Fecha Inicio: ' +profesores[index].fecha_inicio+'                                       - Fecha Fin: ' +profesores[index].fecha_fin),
+              //
+              //                  );
+              //                },
+              //              ),
             ),
 
             new Expanded(

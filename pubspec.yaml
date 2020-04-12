@@ -41,6 +41,7 @@ dependencies:
   path_provider: ^1.5.1
   font_awesome_flutter: ^8.8.1
   syncfusion_flutter_pdf: ^18.1.42-beta
+  geolocator: ^5.3.1
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
@@ -70,6 +71,8 @@ flutter:
     - assets/OpenSans-Italic.ttf
     - assets/OpenSans-BoldItalic.ttf
     - assets/OpenSans-SemiBold.ttf
+    - assets/images/construccion.jpg
+    - assets/images/g.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 

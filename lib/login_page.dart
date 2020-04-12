@@ -55,6 +55,7 @@ class _LoginPageState extends State<LoginPage> {
     return OutlineButton(
       splashColor: Colors.grey,
       onPressed: () {
+        // se realiza la autentificacion de datos del ususario y una vez completo se pasa a la página de inicio
         signInWithGoogle().whenComplete(() {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -65,6 +66,7 @@ class _LoginPageState extends State<LoginPage> {
           );
         });
       },
+      //animacion imagen I.E.S Jandula
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
       highlightElevation: 0,
       borderSide: BorderSide(color: Colors.grey),

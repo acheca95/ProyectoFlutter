@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+
 import 'package:intl/intl.dart';
 import 'package:jandulaseneca/sign_in.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
@@ -17,15 +20,21 @@ var referencia = _firebaseRef.child("asistencia").push().path;
 String clave = referencia.substring(referencia.indexOf("-"));
 //firebase
 
-
 final databaseReferencef = Firestore.instance;
 DocumentReference ref;
 String myId;
+
+//localizacion
+var longitude;
+var latitude;
+
+
 class FirstScreen extends StatefulWidget {
   _HomeState createState() => _HomeState();
 }
 
 class _HomeState extends State<FirstScreen> {
+  @override
   int _selectedIndex = 0;
   static const TextStyle optionStyle =
       TextStyle(fontSize: 30, fontWeight: FontWeight.w700);
@@ -89,6 +98,7 @@ class _HomeState extends State<FirstScreen> {
         ),
       ),
       body: Body(),
+      //menu inferior
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -127,6 +137,7 @@ class Body extends StatelessWidget {
     return Column(
       children: <Widget>[
         SizedBox(height: 10),
+        //datos del usuario
         CircleAvatar(
           backgroundImage: NetworkImage(
             imageUrl,
@@ -177,86 +188,8 @@ class Body extends StatelessWidget {
             controller: new ScrollController(keepScrollOffset: false),
             shrinkWrap: true,
             scrollDirection: Axis.vertical,
+            //cartas con las diferentes opcciones.
             children: <Widget>[
-              new GestureDetector(
-                onTap: () {
-                  AwesomeDialog(
-                    context: context,
-                    animType: AnimType.SCALE,
-                    dialogType: DialogType.INFO,
-                    body: Center(
-                      child: Text(
-                        'Asistencia',
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                    ),
-                    tittle: 'This is Ignored',
-                    desc: 'This is also Ignored',
-                    btnCancelOnPress: () {},
-                    btnOkOnPress: () {
-                      _firebaseRef.child("asistencia").child(clave).set({
-                        "Apellidos": apellidos,
-                        "Nombre": name,
-                        "fecha_inicio": new DateFormat('yyyy-MM-dd – kk:mm')
-                            .format(DateTime.now()),
-                        "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
-                            .format(DateTime.now())
-                      });
-                    },
-                  ).show();
-                },
-                child: new Card(
-                  child: new Container(
-                    padding: new EdgeInsets.all(13.0),
-                    child: new Column(
-                      children: <Widget>[
-                        new Text('Asistencia'),
-                        SizedBox(height: 30),
-                        Icon(Icons.question_answer)
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              new GestureDetector(
-                onTap: () async {
-                  //  _firebaseRef.child("asistencia").child(clave).update({
-                  //                    "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
-                  //                        .format(DateTime.now())
-                  //                  });
-
-                  getData();
-                  //generarclave();
-                },
-                child: new Card(
-                  child: new Container(
-                    padding: new EdgeInsets.all(13.0),
-                    child: new Column(
-                      children: <Widget>[
-                        new Text('Listado'),
-                        SizedBox(height: 30),
-                        Icon(Icons.local_printshop)
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              new GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: new Card(
-                    child: new Container(
-                      padding: new EdgeInsets.all(13.0),
-                      child: new Column(
-                        children: <Widget>[
-                          Text('Salir'),
-                          SizedBox(height: 30),
-                          Icon(Icons.exit_to_app)
-                        ],
-                      ),
-                    ),
-                  )),
               FlipCard(
                 key: cardKey,
                 flipOnTouch: false,
@@ -349,27 +282,7 @@ class Body extends StatelessWidget {
                   ),
                 ),
               ),
-              new GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SecondRoute(),
-                      ),
-                    );
-                  },
-                  child: new Card(
-                    child: new Container(
-                      padding: new EdgeInsets.all(13.0),
-                      child: new Column(
-                        children: <Widget>[
-                          new Text('Imprimir'),
-                          SizedBox(height: 30),
-                          Icon(Icons.view_list)
-                        ],
-                      ),
-                    ),
-                  )),
+
               new GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -384,9 +297,131 @@ class Body extends StatelessWidget {
                       padding: new EdgeInsets.all(13.0),
                       child: new Column(
                         children: <Widget>[
-                          new Text('pagina1'),
+                          new Text('Listado'),
                           SizedBox(height: 30),
-                          Icon(Icons.share)
+                          Icon(Icons.pageview)
+                        ],
+                      ),
+                    ),
+                  )),
+              new GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: new Card(
+                    child: new Container(
+                      padding: new EdgeInsets.all(13.0),
+                      child: new Column(
+                        children: <Widget>[
+                          Text('Salir'),
+                          SizedBox(height: 30),
+                          Icon(Icons.exit_to_app)
+                        ],
+                      ),
+                    ),
+                  )),
+
+              //listado de datos en firebase
+              //           new GestureDetector(
+              //                onTap: () {
+              //                  AwesomeDialog(
+              //                    context: context,
+              //                    animType: AnimType.SCALE,
+              //                    dialogType: DialogType.INFO,
+              //                    body: Center(
+              //                      child: Text(
+              //                        'Asistencia',
+              //                        style: TextStyle(fontStyle: FontStyle.italic),
+              //                      ),
+              //                    ),
+              //                    tittle: 'This is Ignored',
+              //                    desc: 'This is also Ignored',
+              //                    btnCancelOnPress: () {},
+              //                    btnOkOnPress: () {
+              //                      _firebaseRef.child("asistencia").child(clave).set({
+              //                        "Apellidos": apellidos,
+              //                        "Nombre": name,
+              //                        "fecha_inicio": new DateFormat('yyyy-MM-dd – kk:mm')
+              //                            .format(DateTime.now()),
+              //                        "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
+              //                            .format(DateTime.now())
+              //                      });
+              //                    },
+              //                  ).show();
+              //                },
+              //                child: new Card(
+              //                  child: new Container(
+              //                    padding: new EdgeInsets.all(13.0),
+              //                    child: new Column(
+              //                      children: <Widget>[
+              //                        new Text('En Proceso...'),
+              //                        SizedBox(height: 30),
+              //                        Icon(Icons.build)
+              //                      ],
+              //                    ),
+              //                  ),
+              //                ),
+              //              ),
+
+              new GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SecondRoute(),
+                      ),
+                    );
+                  },
+                  child: new Card(
+                    child: new Container(
+                      padding: new EdgeInsets.all(13.0),
+                      child: new Column(
+                        children: <Widget>[
+                          new Text('En Proceso...'),
+                          SizedBox(height: 30),
+                          Icon(Icons.build)
+                        ],
+                      ),
+                    ),
+                  )),
+              new GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SecondRoute(),
+                      ),
+                    );
+                  },
+                  child: new Card(
+                    child: new Container(
+                      padding: new EdgeInsets.all(13.0),
+                      child: new Column(
+                        children: <Widget>[
+                          new Text('En Proceso...'),
+                          SizedBox(height: 30),
+                          Icon(Icons.build)
+                        ],
+                      ),
+                    ),
+                  )),
+              new GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SecondRoute(),
+                      ),
+                    );
+                  },
+                  child: new Card(
+                    child: new Container(
+                      padding: new EdgeInsets.all(13.0),
+                      child: new Column(
+                        children: <Widget>[
+                          new Text('En Proceso...'),
+                          SizedBox(height: 30),
+                          Icon(Icons.build)
                         ],
                       ),
                     ),
@@ -399,47 +434,63 @@ class Body extends StatelessWidget {
   }
 }
 
+//metodo para generar claves para insertar datos en firebase
 void generarclave() {
   referencia =
       new FirebaseDatabase().reference().child("asistencia").push().path;
   clave = referencia.substring(referencia.indexOf("-"));
 }
 
-
 //funciones firestore
 
 void createRecord() async {
- ref = await databaseReferencef
-      .collection("Asistencia")
-      .add({
+
+  final Geolocator geolocation = Geolocator()
+    ..forceAndroidLocationManager = true;
+
+  GeolocationStatus geolocationStatus =
+      await geolocation.checkGeolocationPermissionStatus();
+
+  geolocation
+      .getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
+      .then((Position position) {
+    longitude = "${position.latitude}";
+    latitude = "${position.longitude}";
+    print(longitude + "  " + latitude);
+  }).catchError((e) {
+    print(e);
+  });
+
+  ref = await databaseReferencef.collection("Asistencia2").add({
     "Apellidos": apellidos,
     "Nombre": name,
     "Fecha_inicio": new DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now()),
-    "Fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now())
+    "Fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now()),
+    "Latitud": latitude,
+    "Longitud": longitude
   });
 }
 
 void updateData() {
-
-  myId= ref.documentID;
+  myId = ref.documentID;
   try {
-    databaseReferencef
-        .collection('Asistencia')
-        .document(myId)
-        .updateData({
-      "Fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now())
+    databaseReferencef.collection('Asistencia2').document(myId).updateData({
+      "Fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now()),
+      "Latitud": latitude,
+      "Longitud": longitude
     });
   } catch (e) {
     print(e.toString());
   }
 }
-void getData() {
-  databaseReferencef
-      .collection("Asistencia")
-      .getDocuments()
-      .then((QuerySnapshot snapshot) {
-    snapshot.documents.forEach((f) => print('${f.data}}'));
-  });
-}
+//Sirve para pintar la informacion (no se utiliza pero es util)
+//void getData() {
+//  databaseReferencef
+//      .collection("Asistencia")
+//      .getDocuments()
+//      .then((QuerySnapshot snapshot) {
+//    snapshot.documents.forEach((f) => print('${f.data}}'));
+//  });
+//}
 
 //funciones firestore

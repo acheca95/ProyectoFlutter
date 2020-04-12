@@ -1,15 +1,12 @@
 import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_full_pdf_viewer/full_pdf_viewer_scaffold.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'dart:io';
+
 class ListPage extends StatefulWidget {
   @override
   _ListPageState createState() => _ListPageState();
@@ -22,9 +19,10 @@ List<DocumentSnapshot> Profesores2 = [];
 List<DocumentSnapshot> Profesores3 = [];
 bool loadingProfes = true;
 bool loadingProfes2 = true;
+
 class _ListPageState extends State<ListPage> {
   _getPosts() async {
-    Query q = _firestore.collection("Asistencia").orderBy("Apellidos");
+    Query q = _firestore.collection("Asistencia");
 
     setState(() {
       loadingProfes = true;
@@ -101,33 +99,33 @@ class DetailPage extends StatefulWidget {
 }
 
 class _DetailPageState extends State<DetailPage> {
- List<String> data=new List<String>();
+  List<String> data = new List<String>();
 
-  final pdf = pw.Document(
-
-
-  );
+  final pdf = pw.Document();
 
   _getPostss() async {
+    // se crea una query para odernar por fecha
+    Query q2 = _firestore2.collection("Asistencia").orderBy("Fecha_fin");
+    Query q3 = _firestore2
+        .collection("Asistencia")
+        .where("Nombre", isEqualTo: widget.post.data["Nombre"].toString())
+        .orderBy("Fecha_fin");
+    //se filtra por apellidos y nombre
+    final snapshots = q2.snapshots().map((snapshot) => snapshot.documents.where(
+        (doc) =>
+            doc["Apellidos"] == widget.post.data["Apellidos"] &&
+            doc["Nombre"] == widget.post.data["Nombre"]));
 
-
-
-    Query q2 = _firestore2.collection("Asistencia").where("Apellidos",isEqualTo:widget.post.data["Apellidos"].toString());
     setState(() {
       loadingProfes2 = true;
     });
     QuerySnapshot querySnapshot2 = await q2.getDocuments();
-    Profesores3 = querySnapshot2.documents;
+    //Profesores3 = querySnapshot2.documents;
+    Profesores3 = (await snapshots.first).toList();
     setState(() {
       loadingProfes2 = false;
     });
 
-    for (var i = 0; i < Profesores3.length; i++) {
-      Profesores3[i].data["Fecha_fin"].replaceAll('-' , '/');
-      //print(Profesores3[i].data["Fecha_fin"].replaceAll(' – ' , ' '));
-
-      data.add(Profesores3[i].data["Fecha_fin"].replaceAll(' – ' , ' '));
-    }
   }
 
   @override
@@ -137,13 +135,9 @@ class _DetailPageState extends State<DetailPage> {
   }
 
   writeOnPdf() async {
-
-
-
-
     pdf.addPage(pw.MultiPage(
       pageFormat:
-      PdfPageFormat.letter.copyWith(marginBottom: 1.5 * PdfPageFormat.cm),
+          PdfPageFormat.letter.copyWith(marginBottom: 1.5 * PdfPageFormat.cm),
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       header: (pw.Context context) {
         if (context.pageNumber == 1) {
@@ -165,28 +159,27 @@ class _DetailPageState extends State<DetailPage> {
         return <pw.Widget>[
           pw.Header(level: 0, child: pw.Text("Listado Asistencia")),
           pw.Paragraph(
-              text:"Apellidos: " + widget.post.data["Apellidos"] +", Nombre : "+widget.post.data["Nombre"]
-             ),
-      //  pw.Table.fromTextArray(context: context, data:  Profesores[index].data["Apellidos"]
-          pw.Table.fromTextArray(context: context, data:  <List<String>>[
+              // se obtienen el nombre y el apellidos del usuario selccionado para imprimir en el pdf
+              text: "Apellidos: " +
+                  widget.post.data["Apellidos"] +
+                  ", Nombre : " +
+                  widget.post.data["Nombre"]),
+          //  pw.Table.fromTextArray(context: context, data:  Profesores[index].data["Apellidos"]
+          pw.Table.fromTextArray(context: context, data: <List<String>>[
             <String>['Fecha Inicio', 'Fecha Fin'],
-
-            ...Profesores3.map((item) => [item.data["Fecha_inicio"].replaceAll(' – ' , ' '),item.data["Fecha_fin"].replaceAll(' – ' , ' ')] )
-
-        ]),
-          pw.Column(children: <pw.Widget>[
-
+            // se obtiene la fecha de inicio de y de fin para imprimir en el pdf
+            ...Profesores3.map((item) => [
+                  item.data["Fecha_inicio"].replaceAll(' – ', ' '),
+                  item.data["Fecha_fin"].replaceAll(' – ', ' ')
+                ])
           ]),
-
-
+          pw.Column(children: <pw.Widget>[]),
         ];
       },
     ));
   }
 
   Future savePdf() async {
-
-
     Directory documentDirectory = await getApplicationDocumentsDirectory();
 
     String documentPath = documentDirectory.path;
@@ -195,7 +188,6 @@ class _DetailPageState extends State<DetailPage> {
 
     file.writeAsBytesSync(pdf.save());
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +201,7 @@ class _DetailPageState extends State<DetailPage> {
               await savePdf();
 
               Directory documentDirectory =
-              await getApplicationDocumentsDirectory();
+                  await getApplicationDocumentsDirectory();
 
               String documentPath = documentDirectory.path;
 
@@ -219,8 +211,8 @@ class _DetailPageState extends State<DetailPage> {
                   context,
                   MaterialPageRoute(
                       builder: (context) => PdfViewerPage(
-                        path: fullPath,
-                      )));
+                            path: fullPath,
+                          )));
             },
           ),
           SizedBox(width: 10),
@@ -240,9 +232,10 @@ class _DetailPageState extends State<DetailPage> {
                       children: <Widget>[
                         ListTile(
                           title:
-                              Text("Nombre: " + widget.post.data["Apellidos"]),
+                              //se imprime el nombre y el apellido seleccionado
+                              Text("Apellidos: " + widget.post.data["Apellidos"]),
                           subtitle:
-                              Text("Apellidos: " + widget.post.data["Nombre"]),
+                              Text("Nombre: " + widget.post.data["Nombre"]),
                         ),
                         ListView.builder(
                             scrollDirection: Axis.vertical,
@@ -250,6 +243,7 @@ class _DetailPageState extends State<DetailPage> {
                             itemCount: Profesores3.length,
                             itemBuilder: (BuildContext ctx, int index) {
                               return ListTile(
+                                //se imprime la fecha de inicio y la de fin del usuario correspondiente.
                                 title: Text("Fecha Inicio: " +
                                     Profesores3[index].data["Fecha_inicio"]),
                                 subtitle: Text("Fecha Fin: " +
@@ -259,13 +253,11 @@ class _DetailPageState extends State<DetailPage> {
                       ],
                     ),
             ),
-
     );
   }
 }
 
-
-
+//vista de pdf
 class PdfViewerPage extends StatelessWidget {
   final String path;
   const PdfViewerPage({Key key, this.path}) : super(key: key);
