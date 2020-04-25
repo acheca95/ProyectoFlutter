@@ -1,5 +1,3 @@
-
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,11 +6,11 @@ import 'package:firebase_database/firebase_database.dart';
 
 final FirebaseDatabase _database = FirebaseDatabase.instance;
 
-
-class SecondRoute extends StatefulWidget  {
+class SecondRoute extends StatefulWidget {
   @override
   SecondRouteState createState() => SecondRouteState();
 }
+
 class SecondRouteState extends State<SecondRoute> {
   static AssetImage assetImage = AssetImage('assets/images/construccion.jpg');
   Image image = Image(image: assetImage, width: 300);
@@ -20,18 +18,17 @@ class SecondRouteState extends State<SecondRoute> {
   Profesores profesor;
   DatabaseReference ProfesRef;
 
-
   @override
   void initState() {
     super.initState();
     profesores = new List();
-    profesor =  Profesores("","", "", "", "");
+    profesor = Profesores("", "", "", "", "");
     final FirebaseDatabase database = FirebaseDatabase.instance;
     ProfesRef = database.reference().child("asistencia");
     ProfesRef.onChildAdded.listen(_onEntryAdded);
     ProfesRef.onChildChanged.listen(_onEntryChanged);
-
   }
+
   _onEntryAdded(Event event) {
     setState(() {
       profesores.add(Profesores.fromSnapshot(event.snapshot));
@@ -43,14 +40,12 @@ class SecondRouteState extends State<SecondRoute> {
       return entry.key == event.snapshot.key;
     });
     setState(() {
-      profesores[profesores.indexOf(old)] = Profesores.fromSnapshot(event.snapshot);
+      profesores[profesores.indexOf(old)] =
+          Profesores.fromSnapshot(event.snapshot);
     });
   }
 
-
   Widget build(BuildContext context) {
-
-
     return Scaffold(
       appBar: AppBar(
         title: Text("Pagina"),
@@ -59,7 +54,8 @@ class SecondRouteState extends State<SecondRoute> {
         child: Column(
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-            new Expanded(child: RichText(
+            new Expanded(
+                child: RichText(
               text: TextSpan(
                 style: DefaultTextStyle.of(context).style,
                 children: <TextSpan>[
@@ -69,11 +65,11 @@ class SecondRouteState extends State<SecondRoute> {
                   ),
                 ],
               ),
-            ) ),
+            )),
             Flexible(
               child: image,
 
-                //FirebaseAnimatedList(
+              //FirebaseAnimatedList(
               //                query: ProfesRef,
               //                itemBuilder: (BuildContext context, DataSnapshot snapshot,
               //                    Animation<double> animation, int index) {
@@ -86,23 +82,21 @@ class SecondRouteState extends State<SecondRoute> {
               //                },
               //              ),
             ),
-
             new Expanded(
                 child: new Align(
-                  alignment: Alignment.bottomCenter,
-                  child: RaisedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text('Atras'),
-                  ),
-                )),
+              alignment: Alignment.bottomCenter,
+              child: RaisedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Atras'),
+              ),
+            )),
           ],
         ),
       ),
     );
   }
-
 }
 
 class Profesores {
@@ -111,10 +105,11 @@ class Profesores {
   String Nombre;
   String fecha_inicio;
   String fecha_fin;
-  Profesores(this.key,this.Apellidos, this.Nombre, this.fecha_inicio,this.fecha_fin);
+  Profesores(
+      this.key, this.Apellidos, this.Nombre, this.fecha_inicio, this.fecha_fin);
 
-  Profesores.fromSnapshot(DataSnapshot snapshot) :
-        key = snapshot.key,
+  Profesores.fromSnapshot(DataSnapshot snapshot)
+      : key = snapshot.key,
         Apellidos = snapshot.value["Apellidos"],
         Nombre = snapshot.value["Nombre"],
         fecha_inicio = snapshot.value["fecha_inicio"],
@@ -128,8 +123,4 @@ class Profesores {
       "fecha_fin": fecha_fin,
     };
   }
-
 }
-
-
-
