@@ -33,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
                   cycles: 4,
                   builder: (anim2) => Center(
                     child: Transform.rotate(
-                      angle: anim2.value-12,
+                      angle: anim2.value-11.57,
                       child: Container(
                         margin: EdgeInsets.symmetric(vertical: 20),
                         height: anim1.value,

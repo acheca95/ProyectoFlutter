@@ -299,7 +299,8 @@ class Body extends StatelessWidget {
                           builder: (context) => ListPage(),
                         ),
                       );
-                      Future.delayed(const Duration(milliseconds: 500), () {
+                      //se retrasa la carga para no producir erores.
+                      Future.delayed(const Duration(milliseconds: 1000), () {
 
                         Navigator.pop(context);
                       });

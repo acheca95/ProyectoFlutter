@@ -20,6 +20,8 @@ List<DocumentSnapshot> Profesores = [];
 List<DocumentSnapshot> Profesores2 = [];
 List<DocumentSnapshot> Profesores4 = [];
 List<DocumentSnapshot> Profesores3 = [];
+List<DocumentSnapshot> Profesores5 = [];
+List<DocumentSnapshot> Profesores6 = [];
 bool loadingProfes = true;
 bool loadingProfes2 = true;
 //bool todos = false;
@@ -55,13 +57,12 @@ class _ListPageState extends State<ListPage> {
       if (Profesores2[i].data["Apellidos"] ==
               Profesores2[i + 1].data["Apellidos"] &&
           Profesores2[i].data["Nombre"] == Profesores2[i + 1].data["Nombre"]) {
-       // Profesores2.remove(Profesores2[i+1]);
+        // Profesores2.remove(Profesores2[i+1]);
         Profesores2.removeAt(i + 1);
         eliminado = 1;
-        Profesores=Profesores2;
+        Profesores = Profesores2;
         // Profesores2.sort();
       }
-
     }
 
     //  loadingProfes = loadingProfes2;
@@ -74,7 +75,7 @@ class _ListPageState extends State<ListPage> {
   void initSate() {
     super.initState();
     _getPosts();
-    if(Profesores2.isEmpty){
+    if (Profesores2.isEmpty) {
       _getPosts();
     }
   }
@@ -271,22 +272,33 @@ class _DetailPageState extends State<DetailPage> {
   _getPostss() async {
     // se crea una query para odernar por fecha
     Query q2 = _firestore2.collection("Asistencia").orderBy("Fecha_fin");
-    Query q3 = _firestore2
-        .collection("Asistencia")
-        .where("Nombre", isEqualTo: widget.post.data["Nombre"].toString())
-        .orderBy("Fecha_fin");
+    Query q3 = _firestore2.collection("Asistencia").orderBy("Fecha_fin");
     //se filtra por apellidos y nombre
     final snapshots = q2.snapshots().map((snapshot) => snapshot.documents.where(
         (doc) =>
             doc["Apellidos"] == widget.post.data["Apellidos"] &&
             doc["Nombre"] == widget.post.data["Nombre"]));
-
+    final snapshots2 = q3.snapshots().map((snapshot) => snapshot.documents
+        .where((doc) =>
+            doc["Apellidos"] == widget.post.data["Apellidos"] &&
+            doc["Nombre"] == widget.post.data["Nombre"] &&
+            selectedDate.isAtSameMomentAs(doc["Fecha_inicio"])));
+    final snapshots3 = q3.snapshots().map((snapshot) => snapshot.documents
+        .where((doc) =>
+            doc["Apellidos"] == widget.post.data["Apellidos"] &&
+                doc["Nombre"] == widget.post.data["Nombre"] &&
+                selectedDate.isBefore(doc["Fecha_fin"]) ||
+            selectedDate.isAtSameMomentAs(doc["Fecha_fin"]) &&
+                selectedDate2.isAfter(doc["Fecha_inicio"]) ||
+            selectedDate2.isAtSameMomentAs(doc["Fecha_inicio"])));
     setState(() {
       loadingProfes2 = true;
     });
     QuerySnapshot querySnapshot2 = await q2.getDocuments();
     //Profesores3 = querySnapshot2.documents;
     Profesores3 = (await snapshots.first).toList();
+    Profesores5 = (await snapshots2.first).toList();
+    Profesores6 = (await snapshots3.first).toList();
     setState(() {
       loadingProfes2 = false;
     });
@@ -363,6 +375,7 @@ class _DetailPageState extends State<DetailPage> {
       setState(() {
         selectedDate = picked;
       });
+    show = true;
   }
 
   Future<Null> _selectDate2(BuildContext context) async {
@@ -375,6 +388,19 @@ class _DetailPageState extends State<DetailPage> {
       setState(() {
         selectedDate2 = picked;
       });
+
+    if (selectedDate2.isBefore(selectedDate)) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("Error"),
+              content: Text("La fecha debe ser posterior a la inicial."),
+            );
+          });
+    } else {
+      show2 = true;
+    }
   }
 
   @override
@@ -455,10 +481,11 @@ class _DetailPageState extends State<DetailPage> {
                                     selectedDate.toString().indexOf(":") - 2)),
                                 onPressed: () {
                                   show = false;
+                                  show2 = false;
                                 },
                               ),
                         if (show2) const SizedBox(height: 30),
-                        show == false
+                        show2 == false
                             ? Text("")
                             : MaterialButton(
                                 child: Text(selectedDate2.toString().substring(
@@ -475,10 +502,8 @@ class _DetailPageState extends State<DetailPage> {
         onPressed: () {
           if (show == true) {
             _selectDate2(context);
-            show2 = true;
           } else {
             _selectDate(context);
-            show = true;
           }
 
           //          print(selectedDate.toString());
