@@ -4,15 +4,19 @@ import 'package:google_sign_in/google_sign_in.dart';
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final GoogleSignIn googleSignIn = GoogleSignIn();
 
+//final databaseReference = FirebaseDatabase.instance.reference().child("correos");
+
 String name;
 String apellidos;
 String email;
 String imageUrl;
 
+var correcto = false;
+
 Future<String> signInWithGoogle() async {
   final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
   final GoogleSignInAuthentication googleSignInAuthentication =
-  await googleSignInAccount.authentication;
+      await googleSignInAccount.authentication;
 
   final AuthCredential credential = GoogleAuthProvider.getCredential(
     accessToken: googleSignInAuthentication.accessToken,
@@ -33,9 +37,8 @@ Future<String> signInWithGoogle() async {
 
   // Obtenemos nombre y apellidos
   if (name.contains(" ")) {
-    apellidos=name.substring(name.indexOf(" ")+1);
+    apellidos = name.substring(name.indexOf(" ") + 1);
     name = name.substring(0, name.indexOf(" "));
-
   }
 
   assert(!user.isAnonymous);
@@ -44,11 +47,28 @@ Future<String> signInWithGoogle() async {
   final FirebaseUser currentUser = await _auth.currentUser();
   assert(user.uid == currentUser.uid);
 
-  return 'Login realizado correctamente: $user';
+ // Future<String> getEmail() {
+  //    List<String> names;
+  //
+  //    databaseReference.once().then((DataSnapshot snapshot) {
+  //      List.from(snapshot.value);
+  //      print(snapshot.value);
+  //    });
+  //    for (var i = 0; i < names.length; i++) {
+  //      if (email == names[i]) {
+  //        correcto = true;
+  //      }
+  //    }
+  //  }
+  //
+  //  if (correcto == true) {
+  //    return 'Login realizado correctamente: $user';
+  //  } else {
+  //    return 'error el usuario no tiene permisos: $user';
+  //  }
 }
 
 void signOutGoogle() async {
   await googleSignIn.signOut();
-
   print("Se cerro la sesion.");
 }

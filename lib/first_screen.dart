@@ -1,18 +1,17 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 
 import 'package:intl/intl.dart';
+import 'package:jandulaseneca/listado_usuario.dart';
 import 'package:jandulaseneca/sign_in.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:location/location.dart';
 import 'listado.dart';
 import 'listado_firestore.dart';
 
 final GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
-
 //firebase
 final databaseReference = FirebaseDatabase.instance.reference();
 final _firebaseRef = FirebaseDatabase().reference();
@@ -23,11 +22,10 @@ String clave = referencia.substring(referencia.indexOf("-"));
 final databaseReferencef = Firestore.instance;
 DocumentReference ref;
 String myId;
-
 //localizacion
 var longitude;
 var latitude;
-
+bool activo = false;
 
 class FirstScreen extends StatefulWidget {
   _HomeState createState() => _HomeState();
@@ -218,10 +216,14 @@ class Body extends StatelessWidget {
                         //                          "fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm')
                         //                              .format(DateTime.now())
                         //                        });
+                        //localización
+
+                        loca();
                         //firebase
 
                         createRecord();
                         cardKey.currentState.toggleCard();
+                        activo = true;
                       },
                     ).show();
                   },
@@ -264,6 +266,7 @@ class Body extends StatelessWidget {
                         //firebase
                         generarclave();
                         cardKey.currentState.toggleCard();
+                        activo = false;
                       },
                     ).show();
                   },
@@ -285,12 +288,32 @@ class Body extends StatelessWidget {
 
               new GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ListPage(),
-                      ),
-                    );
+                    // if (email == "rafael.delgado.cubilla@iesjandula.es") {
+                    if (email == "nitreer95@gmail.com") {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ListPage(),
+                        ),
+                      );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ListPage(),
+                        ),
+                      );
+                      //se retrasa la carga para no producir erores.
+                      Future.delayed(const Duration(milliseconds: 1000), () {
+                        Navigator.pop(context);
+                      });
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ListUser(),
+                        ),
+                      );
+                    }
                   },
                   child: new Card(
                     child: new Container(
@@ -306,7 +329,28 @@ class Body extends StatelessWidget {
                   )),
               new GestureDetector(
                   onTap: () {
-                    Navigator.pop(context);
+                    if (activo == true) {
+                      AwesomeDialog(
+                        context: context,
+                        animType: AnimType.SCALE,
+                        dialogType: DialogType.INFO,
+                        body: Center(
+                          child: Text(
+                            'Va a salir de la aplicacion con la asistencia activa desea cerrarla?',
+                            style: TextStyle(fontStyle: FontStyle.italic),
+                          ),
+                        ),
+                        tittle: 'This is Ignored',
+                        desc: 'This is also Ignored',
+                        btnCancelOnPress: () {},
+                        btnOkOnPress: () {
+                          updateData();
+                          Navigator.pop(context);
+                        },
+                      ).show();
+                    } else {
+                      Navigator.pop(context);
+                    }
                   },
                   child: new Card(
                     child: new Container(
@@ -442,26 +486,60 @@ void generarclave() {
 }
 
 //funciones firestore
+void loca() async {
+  Location location = new Location();
+  location.requestPermission();
+  bool _serviceEnabled;
+  PermissionStatus _permissionGranted;
+  LocationData _locationData;
+
+  _serviceEnabled = await location.serviceEnabled();
+  if (!_serviceEnabled) {
+    _serviceEnabled = await location.requestService();
+    if (!_serviceEnabled) {
+      return;
+    }
+  }
+
+  _permissionGranted = await location.hasPermission();
+  if (_permissionGranted == PermissionStatus.denied) {
+    _permissionGranted = await location.requestPermission();
+    if (_permissionGranted != PermissionStatus.granted) {
+      return;
+    }
+  }
+  _locationData = await location.getLocation();
+  location.onLocationChanged.listen((LocationData currentLocation) {
+    // Use current location
+  });
+  location.requestPermission();
+  longitude = _locationData.longitude;
+  latitude = _locationData.latitude;
+  print(longitude + " " + latitude);
+}
 
 void createRecord() async {
+//  final AndroidIntent intent = new AndroidIntent(
+//    action: 'android.settings.LOCATION_SOURCE_SETTINGS',
+//  );
+//  await intent.launch();
+//  final Geolocator geolocation = Geolocator()
+//    ..forceAndroidLocationManager = true;
+//
+//  GeolocationStatus geolocationStatus =
+//  await geolocation.checkGeolocationPermissionStatus();
+//
+//  geolocation
+//      .getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
+//      .then((Position position) {
+//    longitude = "${position.latitude}";
+//    latitude = "${position.longitude}";
+//    print(longitude + "  " + latitude);
+//  }).catchError((e) {
+//    print(e);
+//  });
 
-  final Geolocator geolocation = Geolocator()
-    ..forceAndroidLocationManager = true;
-
-  GeolocationStatus geolocationStatus =
-      await geolocation.checkGeolocationPermissionStatus();
-
-  geolocation
-      .getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
-      .then((Position position) {
-    longitude = "${position.latitude}";
-    latitude = "${position.longitude}";
-    print(longitude + "  " + latitude);
-  }).catchError((e) {
-    print(e);
-  });
-
-  ref = await databaseReferencef.collection("Asistencia2").add({
+  ref = await databaseReferencef.collection("Asistencia").add({
     "Apellidos": apellidos,
     "Nombre": name,
     "Fecha_inicio": new DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now()),
@@ -474,7 +552,7 @@ void createRecord() async {
 void updateData() {
   myId = ref.documentID;
   try {
-    databaseReferencef.collection('Asistencia2').document(myId).updateData({
+    databaseReferencef.collection('Asistencia').document(myId).updateData({
       "Fecha_fin": new DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now()),
       "Latitud": latitude,
       "Longitud": longitude
