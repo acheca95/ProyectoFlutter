@@ -47,7 +47,7 @@ Future<String> signInWithGoogle() async {
   final FirebaseUser currentUser = await _auth.currentUser();
   assert(user.uid == currentUser.uid);
 
- // Future<String> getEmail() {
+  // Future<String> getEmail() {
   //    List<String> names;
   //
   //    databaseReference.once().then((DataSnapshot snapshot) {

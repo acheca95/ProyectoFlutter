@@ -9,40 +9,25 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-class Listdates extends StatefulWidget {
 
+class Listdates extends StatefulWidget {
   final DateTime fechaInicio;
   final DateTime fechaFin;
   final DocumentSnapshot post;
-  Listdates({
-    this.fechaInicio,
-    this.fechaFin,
-    this.post
-  });
+  Listdates({this.fechaInicio, this.fechaFin, this.post});
 
   @override
   _ListPageState createState() => _ListPageState();
 }
-
 
 Firestore _firestore = Firestore.instance;
 Firestore _firestore2 = Firestore.instance;
 List<DocumentSnapshot> Profesores3 = [];
 bool loadingProfes = true;
 
-
-
-
 //busqueda
 
-
 class _ListPageState extends State<Listdates> {
-
-
-
-
-
-
   final pdf = pw.Document();
   _getPosts() async {
     Query q = _firestore
@@ -56,7 +41,7 @@ class _ListPageState extends State<Listdates> {
         .orderBy("Fecha_fin");
     //se filtra por apellidos y nombre
     final snapshots = q2.snapshots().map((snapshot) => snapshot.documents.where(
-            (doc) => doc["Apellidos"] == apellidos && doc["Nombre"] == name));
+        (doc) => doc["Apellidos"] == apellidos && doc["Nombre"] == name));
     setState(() {
       loadingProfes = true;
     });
@@ -78,7 +63,7 @@ class _ListPageState extends State<Listdates> {
   writeOnPdf() async {
     pdf.addPage(pw.MultiPage(
       pageFormat:
-      PdfPageFormat.letter.copyWith(marginBottom: 1.5 * PdfPageFormat.cm),
+          PdfPageFormat.letter.copyWith(marginBottom: 1.5 * PdfPageFormat.cm),
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       header: (pw.Context context) {
         if (context.pageNumber == 1) {
@@ -90,7 +75,7 @@ class _ListPageState extends State<Listdates> {
             padding: const pw.EdgeInsets.only(bottom: 3.0 * PdfPageFormat.mm),
             decoration: const pw.BoxDecoration(
                 border: pw.BoxBorder(
-                    bottom: true, width: 0.5, color: PdfColors.grey)),
+                    bottom: true, width: 0.5, color: PdfColors.black)),
             child: pw.Text('Portable Document Format',
                 style: pw.Theme.of(context)
                     .header5
@@ -100,24 +85,22 @@ class _ListPageState extends State<Listdates> {
         return <pw.Widget>[
           pw.Header(level: 0, child: pw.Text("Listado Asistencia")),
           pw.Paragraph(
-            // se obtienen el nombre y el apellidos del usuario selccionado para imprimir en el pdf
+              // se obtienen el nombre y el apellidos del usuario selccionado para imprimir en el pdf
               text: "Apellidos: " + apellidos + ", Nombre : " + name),
           //  pw.Table.fromTextArray(context: context, data:  Profesores[index].data["Apellidos"]
           pw.Table.fromTextArray(context: context, data: <List<String>>[
             <String>['Fecha Inicio', 'Fecha Fin'],
             // se obtiene la fecha de inicio de y de fin para imprimir en el pdf
             ...Profesores3.map((item) => [
-              item.data["Fecha_inicio"].replaceAll(' – ', ' '),
-              item.data["Fecha_fin"].replaceAll(' – ', ' ')
-            ])
+                  item.data["Fecha_inicio"].replaceAll(' – ', ' '),
+                  item.data["Fecha_fin"].replaceAll(' – ', ' ')
+                ])
           ]),
           pw.Column(children: <pw.Widget>[]),
         ];
       },
     ));
   }
-
-
 
   Future savePdf() async {
     Directory documentDirectory = await getApplicationDocumentsDirectory();
@@ -134,7 +117,6 @@ class _ListPageState extends State<Listdates> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: Text("Listado filtrado "),
@@ -146,7 +128,7 @@ class _ListPageState extends State<Listdates> {
               await savePdf();
 
               Directory documentDirectory =
-              await getApplicationDocumentsDirectory();
+                  await getApplicationDocumentsDirectory();
 
               String documentPath = documentDirectory.path;
 
@@ -156,8 +138,8 @@ class _ListPageState extends State<Listdates> {
                   context,
                   MaterialPageRoute(
                       builder: (context) => PdfViewerPage(
-                        path: fullPath,
-                      )));
+                            path: fullPath,
+                          )));
             },
           ),
           IconButton(
@@ -171,42 +153,41 @@ class _ListPageState extends State<Listdates> {
       ),
       body: _getPosts() == true
           ? Container(
-          child: Center(
-            child: Text("Cargando..."),
-          ))
+              child: Center(
+              child: Text("Cargando..."),
+            ))
           : Container(
-        child: Profesores3.length == 0
-            ? Center(
-          child: Text("No existen Registros"),
-        )
-            : Column(
-          children: <Widget>[
-            ListTile(
-              title:
-              //se imprime el nombre y el apellido seleccionado
-              Text("Apellidos: " + apellidos),
-              subtitle: Text("Nombre: " + name),
+              child: Profesores3.length == 0
+                  ? Center(
+                      child: Text("No existen Registros"),
+                    )
+                  : Column(
+                      children: <Widget>[
+                        ListTile(
+                          title:
+                              //se imprime el nombre y el apellido seleccionado
+                              Text("Apellidos: " + apellidos),
+                          subtitle: Text("Nombre: " + name),
+                        ),
+                        Expanded(
+                          child: ListView.builder(
+                              scrollDirection: Axis.vertical,
+                              shrinkWrap: true,
+                              itemCount: Profesores3.length,
+                              itemBuilder: (BuildContext ctx, int index) {
+                                return ListTile(
+                                  //se imprime la fecha de inicio y la de fin del usuario correspondiente.
+                                  title: Text("Fecha Inicio: " +
+                                      Profesores3[index].data["Fecha_inicio"]),
+                                  subtitle: Text("Fecha Fin: " +
+                                      Profesores3[index].data["Fecha_fin"]),
+                                );
+                              }),
+                        ),
+                        const SizedBox(height: 30),
+                      ],
+                    ),
             ),
-            Expanded(
-              child: ListView.builder(
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                  itemCount: Profesores3.length,
-                  itemBuilder: (BuildContext ctx, int index) {
-                    return ListTile(
-                      //se imprime la fecha de inicio y la de fin del usuario correspondiente.
-                      title: Text("Fecha Inicio: " +
-                          Profesores3[index].data["Fecha_inicio"]),
-                      subtitle: Text("Fecha Fin: " +
-                          Profesores3[index].data["Fecha_fin"]),
-                    );
-                  }),
-            ),
-            const SizedBox(height: 30),
-          ],
-        ),
-      ),
-
     );
   }
 }

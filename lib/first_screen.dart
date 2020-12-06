@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 
 import 'package:intl/intl.dart';
 import 'package:jandulaseneca/listado_usuario.dart';
+import 'package:jandulaseneca/login_page.dart';
 import 'package:jandulaseneca/sign_in.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:location/location.dart';
 import 'listado.dart';
 import 'listado_firestore.dart';
+import 'package:localstorage/localstorage.dart';
 
 final GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
 //firebase
@@ -31,7 +33,68 @@ class FirstScreen extends StatefulWidget {
   _HomeState createState() => _HomeState();
 }
 
+class TodoItem {
+  String title;
+  bool done;
+
+  TodoItem({this.title, this.done});
+
+  toJSONEncodable() {
+    Map<String, dynamic> m = new Map();
+
+    m['title'] = title;
+    m['done'] = done;
+
+    return m;
+  }
+}
+
+class TodoList {
+  List<TodoItem> items;
+
+  TodoList() {
+    items = new List();
+  }
+
+  toJSONEncodable() {
+    return items.map((item) {
+      return item.toJSONEncodable();
+    }).toList();
+  }
+}
+
 class _HomeState extends State<FirstScreen> {
+  final TodoList list = new TodoList();
+  final LocalStorage storage = new LocalStorage(clave);
+  bool initialized = false;
+
+  _toggleItem(TodoItem item) {
+    setState(() {
+      item.done = !item.done;
+      _saveToStorage();
+    });
+  }
+
+  _addItem(String title) {
+    setState(() {
+      final item = new TodoItem(title: title, done: false);
+      list.items.add(item);
+      _saveToStorage();
+    });
+  }
+
+  _saveToStorage() {
+    storage.setItem(clave, list.toJSONEncodable());
+  }
+
+  _clearStorage() async {
+    await storage.clear();
+
+    setState(() {
+      list.items = storage.getItem(clave) ?? [];
+    });
+  }
+
   @override
   int _selectedIndex = 0;
   static const TextStyle optionStyle =
@@ -296,16 +359,9 @@ class Body extends StatelessWidget {
                           builder: (context) => ListPage(),
                         ),
                       );
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ListPage(),
-                        ),
-                      );
+
                       //se retrasa la carga para no producir erores.
-                      Future.delayed(const Duration(milliseconds: 1000), () {
-                        Navigator.pop(context);
-                      });
+
                     } else {
                       Navigator.push(
                         context,
@@ -344,12 +400,25 @@ class Body extends StatelessWidget {
                         desc: 'This is also Ignored',
                         btnCancelOnPress: () {},
                         btnOkOnPress: () {
+                          cardKey.currentState.toggleCard();
                           updateData();
-                          Navigator.pop(context);
+                          signOutGoogle();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LoginPage(),
+                            ),
+                          );
                         },
                       ).show();
                     } else {
-                      Navigator.pop(context);
+                      signOutGoogle();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LoginPage(),
+                        ),
+                      );
                     }
                   },
                   child: new Card(

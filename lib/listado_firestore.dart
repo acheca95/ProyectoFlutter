@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:f_datetimerangepicker/f_datetimerangepicker.dart';
@@ -10,7 +11,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 class ListPage extends StatefulWidget {
   @override
@@ -34,6 +34,8 @@ var show2 = false;
 DateFormat primera;
 DateFormat ultima;
 //busqueda
+var stop = 0;
+Timer timer;
 
 class _ListPageState extends State<ListPage> {
   final pdf = pw.Document();
@@ -43,33 +45,51 @@ class _ListPageState extends State<ListPage> {
         .orderBy("Apellidos")
         .orderBy("Nombre");
 
-    setState(() {
-      loadingProfes = true;
-    });
-    QuerySnapshot querySnapshot = await q.getDocuments();
+    timer = new Timer(const Duration(seconds: 2), () async {
+      {
+        setState(() {
+          loadingProfes = true;
+        });
+        QuerySnapshot querySnapshot = await q.getDocuments();
 
-    Profesores2 = querySnapshot.documents;
-    Profesores4 = querySnapshot.documents;
-    int eliminado = 0;
-    int count;
-    for (var i = 0; i < Profesores2.length; i++) {
-      //  print(Profesores[i].data["Nombre"]);
-      if (eliminado == 1) {
-        i = i - 1;
-        eliminado = 0;
-      }
-      if (Profesores2[i].data["Apellidos"] ==
-              Profesores2[i + 1].data["Apellidos"] &&
-          Profesores2[i].data["Nombre"] == Profesores2[i + 1].data["Nombre"]) {
-        // Profesores2.remove(Profesores2[i+1]);
-        Profesores2.removeAt(i + 1);
-        eliminado = 1;
+        Profesores2 = querySnapshot.documents;
+        Profesores4 = querySnapshot.documents;
+
+        int eliminado = 0;
+        var eliminados = [];
+        int count = 0;
         Profesores = Profesores2;
-        // Profesores2.sort();
-      }
-    }
 
-    //  loadingProfes = loadingProfes2;
+        for (var i = 0; i < Profesores.length; i++) {
+          if (eliminado == 1) {
+            i = i - 1;
+            eliminado = 0;
+          }
+          if (Profesores[i].data["Apellidos"] ==
+                  Profesores[i + 1].data["Apellidos"] &&
+              Profesores[i].data["Nombre"] ==
+                  Profesores[i + 1].data["Nombre"]) {
+            if (Profesores.length == i) {
+              print('final');
+            } else {
+              Profesores.remove(Profesores.first);
+            }
+
+            eliminado = 1;
+          }
+        }
+
+        //
+        //  loadingProfes = loadingProfes2;
+
+        stop++;
+        print(stop);
+        if (stop == 2) {
+          timer.cancel();
+        }
+      }
+    });
+
     setState(() {
       loadingProfes = false;
     });
@@ -78,8 +98,10 @@ class _ListPageState extends State<ListPage> {
   @override
   void initSate() {
     super.initState();
+
     _getPosts();
-    if (Profesores2.isEmpty) {
+
+    if (Profesores.isEmpty) {
       _getPosts();
     }
   }
@@ -322,7 +344,17 @@ class _DetailPageState extends State<DetailPage> {
                     bottom: true, width: 0.5, color: PdfColors.grey)),
             child: pw.Text('Portable Document Format',
                 style: pw.Theme.of(context)
-                    .header5
+                    .defaultTextStyle
+                    .copyWith(color: PdfColors.grey)));
+      },
+      footer: (pw.Context context) {
+        return pw.Container(
+            alignment: pw.Alignment.centerRight,
+            margin: const pw.EdgeInsets.only(top: 1.0 * PdfPageFormat.cm),
+            child: pw.Text(
+                'Page ${context.pageNumber} of ${context.pagesCount}',
+                style: pw.Theme.of(context)
+                    .defaultTextStyle
                     .copyWith(color: PdfColors.grey)));
       },
       build: (pw.Context context) {
@@ -335,14 +367,17 @@ class _DetailPageState extends State<DetailPage> {
                   ", Nombre : " +
                   widget.post.data["Nombre"]),
           //  pw.Table.fromTextArray(context: context, data:  Profesores[index].data["Apellidos"]
+
+          pw.Header(level: 2, text: 'PostScript'),
           pw.Table.fromTextArray(context: context, data: <List<String>>[
             <String>['Fecha Inicio', 'Fecha Fin'],
             // se obtiene la fecha de inicio de y de fin para imprimir en el pdf
             ...Profesores3.map((item) => [
-                  item.data["Fecha_inicio"].replaceAll(' – ', ' '),
-                  item.data["Fecha_fin"].replaceAll(' – ', ' ')
-                ])
+                  item.data["Fecha_inicio"].replaceAll(' – ', ' ').toString(),
+                  item.data["Fecha_fin"].replaceAll(' – ', ' ').toString()
+                ]),
           ]),
+          pw.Padding(padding: const pw.EdgeInsets.all(10)),
           pw.Column(children: <pw.Widget>[]),
         ];
       },
@@ -502,7 +537,6 @@ class _DetailPageState extends State<DetailPage> {
                       .where("Fecha_inicio",
                           isLessThanOrEqualTo:
                               new DateFormat('yyyy-MM-dd – kk:mm').format(end));
-
 
                   QuerySnapshot querySnapshot = await q.getDocuments();
                   Profesores6 = querySnapshot.documents;
