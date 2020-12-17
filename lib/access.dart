@@ -59,17 +59,17 @@ class SecondRouteState extends State<MailList> {
 
 
               child: FirebaseAnimatedList(
-                query: ProfesRef,
-                itemBuilder: (BuildContext context, DataSnapshot snapshot,
-                    Animation<double> animation, int index) {
-                  return new ListTile(
-                    title: Text('Apellidos: ' +profesores[index].Apellidos+' - Nombre: ' +profesores[index].Nombre),
+                            query: ProfesRef,
+                             itemBuilder: (BuildContext context, DataSnapshot snapshot,
+                                  Animation<double> animation, int index) {
+                                return new ListTile(
+                                  title: Text('Apellidos: ' +profesores[index].Apellidos+' - Nombre: ' +profesores[index].Nombre),
 
-                    subtitle: Text('Fecha Inicio: ' +profesores[index].fecha_inicio+'                                       - Fecha Fin: ' +profesores[index].fecha_fin),
+                                  subtitle: Text('Fecha Inicio: ' +profesores[index].fecha_inicio+'                                       - Fecha Fin: ' +profesores[index].fecha_fin),
 
-                  );
-                },
-              ),
+                                );
+                              },
+                            ),
             ),
             new Expanded(
                 child: new Align(

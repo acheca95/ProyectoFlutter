@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:jandulaseneca/listado_usuario.dart';
 import 'package:jandulaseneca/login_page.dart';
+import 'package:jandulaseneca/report.dart';
 import 'package:jandulaseneca/sign_in.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:location/location.dart';

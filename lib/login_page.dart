@@ -78,6 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                       content: Text("El usuario no posee permisos"),
                     );
                   });
+              signOutGoogle();
             }
           });
         });
